@@ -1,0 +1,7 @@
+# Request enrollment
+POST http://{{host}}:{{port}}/enrollments
+
+{
+    "user_id" : "db645bc6-2baf-4faa-b6a4-b7bdb2f55c70",
+    "course_id" : "f57e52c9-7d2a-491f-afb4-92732afcb936"
+}

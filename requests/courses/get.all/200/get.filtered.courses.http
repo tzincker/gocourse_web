@@ -1,0 +1,9 @@
+# Request courses
+
+###
+# @prompt name course name
+# @prompt start_date course start date 
+# @prompt end_date course end date 
+
+
+GET http://{{host}}:{{port}}/courses?first_name={{name}}&start_date={{start_date}}&end_date={{end_date}}

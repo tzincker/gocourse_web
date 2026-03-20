@@ -1,0 +1,10 @@
+# Request users
+
+# @prompt id user id
+
+PATCH http://{{host}}:{{port}}/users/{{id}}
+
+{
+    "email" : "ayy2@lmao2.com",
+    "phone" : "777-777-777"
+}

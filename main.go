@@ -1,48 +1,55 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/tzincker/gocourse_web/internal/course"
+	"github.com/tzincker/gocourse_web/internal/enrollment"
 	"github.com/tzincker/gocourse_web/internal/user"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"github.com/tzincker/gocourse_web/pkg/bootstrap"
 )
 
 func main() {
 	_ = godotenv.Load()
+	url := bootstrap.Url()
 
 	router := mux.NewRouter()
-	dsn := fmt.Sprintf(
-		"%s:%s@(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
-		os.Getenv("DATABASE_USER"),
-		os.Getenv("DATABASE_PASSWORD"),
-		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_PORT"),
-		os.Getenv("DATABASE_NAME"))
 
-	fmt.Println(dsn)
+	log := bootstrap.InitLogger()
+	db, err := bootstrap.DBConnection()
 
-	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	db = db.Debug()
-	db.AutoMigrate(&user.User{})
+	userRepo := user.NewRepo(log, db)
+	userSrv := user.NewService(log, userRepo)
+	userEnd := user.MakeEndpoints(userSrv)
 
-	userSrc := user.NewService()
+	courseRepo := course.NewRepo(log, db)
+	courseSrv := course.NewService(log, courseRepo)
+	courseEnd := course.MakeEndpoints(courseSrv)
 
-	userEnd := user.MakeEndpoints(userSrc)
+	enrollRepo := enrollment.NewRepo(log, db)
+	enrollSrv := enrollment.NewService(log, userSrv, courseSrv, enrollRepo)
+	enrollEnd := enrollment.MakeEndpoints(enrollSrv)
+
 	router.HandleFunc("/users", userEnd.Create).Methods("POST")
-	router.HandleFunc("/users/{id}", userEnd.Get).Methods("GET")
 	router.HandleFunc("/users", userEnd.GetAll).Methods("GET")
-	router.HandleFunc("/users", userEnd.Update).Methods("PATCH")
+	router.HandleFunc("/users/{id}", userEnd.Get).Methods("GET")
+	router.HandleFunc("/users/{id}", userEnd.Update).Methods("PATCH")
 	router.HandleFunc("/users/{id}", userEnd.Delete).Methods("DELETE")
 
-	url := fmt.Sprintf("%s:%s", os.Getenv("HOST"), os.Getenv("PORT"))
+	router.HandleFunc("/courses", courseEnd.Create).Methods("POST")
+	router.HandleFunc("/courses", courseEnd.GetAll).Methods("GET")
+	router.HandleFunc("/courses/{id}", courseEnd.Get).Methods("GET")
+	router.HandleFunc("/courses/{id}", courseEnd.Update).Methods("PATCH")
+	router.HandleFunc("/courses/{id}", courseEnd.Delete).Methods("DELETE")
+
+	router.HandleFunc("/enrollments", enrollEnd.Create).Methods("POST")
 
 	srv := &http.Server{
 		Handler:      http.TimeoutHandler(router, 5*time.Second, "Server timed out"),
@@ -51,7 +58,8 @@ func main() {
 		ReadTimeout:  5 * time.Second,
 	}
 	log.Printf("Server listening to: %s\n", url)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
+
 	if err != nil {
 		log.Fatal(err)
 	}

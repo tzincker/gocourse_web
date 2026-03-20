@@ -1,4 +1,4 @@
-package user
+package course
 
 import (
 	"encoding/json"
@@ -21,17 +21,15 @@ type (
 	}
 
 	CreateReq struct {
-		FirstName string `json:"first_name"`
-		LastName  string `json:"last_name"`
-		Email     string `json:"email"`
-		Phone     string `json:"phone"`
+		Name      string `json:"name"`
+		StartDate string `json:"start_date"`
+		EndDate   string `json:"end_date"`
 	}
 
 	UpdateReq struct {
-		FirstName *string `json:"first_name"`
-		LastName  *string `json:"last_name"`
-		Email     *string `json:"email"`
-		Phone     *string `json:"phone"`
+		Name      string `json:"name"`
+		StartDate string `json:"start_date"`
+		EndDate   string `json:"end_date"`
 	}
 
 	Response struct {
@@ -62,31 +60,25 @@ func makeCreateEndpoint(s Service) Controller {
 			return
 		}
 
-		if req.FirstName == "" {
+		if req.Name == "" {
 			w.WriteHeader(400)
 			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "firstname required"})
 			return
 		}
 
-		if req.LastName == "" {
+		if req.StartDate == "" {
 			w.WriteHeader(400)
 			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "lastname required"})
 			return
 		}
 
-		if req.Email == "" {
+		if req.EndDate == "" {
 			w.WriteHeader(400)
 			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "email required"})
 			return
 		}
 
-		if req.Phone == "" {
-			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "phone required"})
-			return
-		}
-
-		usr, err := s.Create(req.FirstName, req.LastName, req.Email, req.Phone)
+		usr, err := s.Create(req.Name, req.StartDate, req.EndDate)
 		if err != nil {
 			w.WriteHeader(500)
 			json.NewEncoder(w).Encode(&Response{Status: 500, Err: err.Error()})
@@ -101,7 +93,7 @@ func makeGetEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path := mux.Vars(r)
 		id := path["id"]
-		user, err := s.Get(id)
+		course, err := s.Get(id)
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -109,7 +101,7 @@ func makeGetEndpoint(s Service) Controller {
 			return
 		}
 
-		json.NewEncoder(w).Encode(&Response{Status: 200, Data: user})
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: course})
 	}
 }
 
@@ -120,8 +112,9 @@ func makeGetAllEndpoint(s Service) Controller {
 		page, _ := strconv.Atoi(v.Get("page"))
 
 		filters := Filters{
-			FirstName: v.Get("first_name"),
-			LastName:  v.Get("last_name"),
+			Name:      v.Get("first_name"),
+			StartDate: v.Get("start_date"),
+			EndDate:   v.Get("end_date"),
 		}
 
 		count, err := s.Count(filters)
@@ -138,14 +131,14 @@ func makeGetAllEndpoint(s Service) Controller {
 			return
 		}
 
-		users, err := s.GetAll(filters, meta.Offset(), meta.Limit())
+		courses, err := s.GetAll(filters, meta.Offset(), meta.Limit())
 		if err != nil {
 			w.WriteHeader(500)
 			json.NewEncoder(w).Encode(&Response{Status: 500, Err: err.Error()})
 			return
 		}
 
-		json.NewEncoder(w).Encode(&Response{Status: 200, Data: users, Meta: meta})
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: courses, Meta: meta})
 	}
 }
 
@@ -161,7 +154,7 @@ func makeUpdateEndpoint(s Service) Controller {
 			return
 		}
 
-		err := s.Update(id, req.FirstName, req.LastName, req.Email, req.Phone)
+		err := s.Update(id, &req.Name, &req.StartDate, &req.EndDate)
 
 		if err != nil {
 			w.WriteHeader(500)

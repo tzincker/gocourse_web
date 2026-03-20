@@ -2,8 +2,8 @@
 POST http://{{host}}:{{port}}/users
 
 {
-    "first_name" : "Ayy",
-    "last_name" : "Lmao",
-    "email" : "ayy@lmao.com",
-    "phone" : "555-555-555"
+    "first_name" : "tuni tuni",
+    "last_name" : "talaka",
+    "email" : "tuni@talaka.com",
+    "phone" : "444-444-444"
 }

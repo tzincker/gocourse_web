@@ -1,0 +1,11 @@
+# Request courses
+
+# @prompt id course id
+
+PATCH http://{{host}}:{{port}}/courses/{{id}}
+
+{
+    "name" : "ayy2@lmao2.com",
+    "start_date" : "777-777-777",
+    "end_date" : "777-777-777"
+}
