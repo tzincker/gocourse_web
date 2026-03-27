@@ -23,7 +23,6 @@ func DBConnection() (*gorm.DB, error) {
 		os.Getenv("DATABASE_PORT"),
 		os.Getenv("DATABASE_NAME"))
 
-	fmt.Println(dsn)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if os.Getenv("DATABASE_IS_DEBUG") == "true" {
